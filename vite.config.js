@@ -9,9 +9,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['rssb-logo.png'],
       manifest: {
-        name: 'RSSB Pharmacy Reception - Our Health, Our Future',
-        short_name: 'RSSB Reception',
-        description: 'Reception desk app for pharmaceutical invoice submissions to RSSB.',
+        name: 'RSSB Medical Invoice Workflow System',
+        short_name: 'RSSB Invoices',
+        description: 'District submission, HQ reception, verification, and Finance handoff for RSSB medical invoices.',
         theme_color: '#0b3d78',
         background_color: '#f4f6f9',
         display: 'standalone',
@@ -26,4 +26,17 @@ export default defineConfig({
       },
     }),
   ],
+  build: {
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [
+            { name: 'vendor-react', test: /node_modules\/(react|react-dom)\// },
+            { name: 'vendor-recharts', test: /node_modules\/(recharts|d3-[a-z-]+)\// },
+            { name: 'vendor-supabase', test: /node_modules\/@supabase\// },
+          ],
+        },
+      },
+    },
+  },
 })

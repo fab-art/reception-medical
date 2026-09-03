@@ -80,7 +80,7 @@ export default function PharmacyList({ pharmacies, setPharmacies }) {
     <div className="p-4 md:p-8 max-w-5xl">
       <header className="mb-6 flex flex-col md:flex-row md:items-end md:justify-between gap-3">
         <div>
-          <h1 className="font-display text-2xl md:text-3xl font-semibold text-rssb-blue-dark">Pharmacy Master List</h1>
+          <h1 className="font-display text-2xl md:text-3xl font-medium text-rssb-blue-dark">Facility Master List</h1>
           <p className="text-sm text-gray-500 mt-1">{pharmacies.length} registered pharmacies served by this branch.</p>
         </div>
         <div className="flex gap-2">
@@ -121,10 +121,10 @@ export default function PharmacyList({ pharmacies, setPharmacies }) {
         {editing && (
           <form onSubmit={handleSave} className="p-5">
             <h3 className="font-semibold text-rssb-blue-dark mb-4">{pharmacies.some(p => p.code === editing.code) ? 'Edit pharmacy' : 'Add pharmacy'}</h3>
-            <Field label="Pharmacy code">
+            <Field label="Facility code">
               <input className={inputCls} value={editing.code} onChange={(e) => setEditing({ ...editing, code: e.target.value })} required />
             </Field>
-            <Field label="Pharmacy name">
+            <Field label="Facility name">
               <input className={inputCls} value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} required />
             </Field>
             <Field label="District">

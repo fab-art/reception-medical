@@ -71,7 +71,7 @@ export default function Officers({ officers, setOfficers, receptions }) {
   return (
     <div className="p-4 md:p-8 max-w-5xl">
       <header className="mb-6">
-        <h1 className="font-display text-2xl md:text-3xl font-semibold text-rssb-blue-dark">Officers &amp; Access</h1>
+        <h1 className="font-display text-2xl md:text-3xl font-medium text-rssb-blue-dark">Officers &amp; Access</h1>
         <p className="text-sm text-gray-500 mt-1">
           Add staff, control who handles reception, and issue their login PIN &mdash; all from one place.
           {unassignedCount > 0 && <span className="text-status-warn font-medium"> {unassignedCount} record(s) currently unassigned.</span>}

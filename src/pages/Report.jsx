@@ -70,7 +70,7 @@ export default function Report({ pharmacies, receptions, settings, officers = []
     <div className="p-4 md:p-8 max-w-6xl">
       <header className="mb-6 flex flex-col md:flex-row md:items-end md:justify-between gap-3 no-print">
         <div>
-          <h1 className="font-display text-2xl md:text-3xl font-semibold text-rssb-blue-dark">Reception Report</h1>
+          <h1 className="font-display text-2xl md:text-3xl font-medium text-rssb-blue-dark">Reception Report</h1>
           <p className="text-sm text-gray-500 mt-1">Pharmaceutical Invoices Verification Unit &mdash; RSSB</p>
         </div>
         <div className="flex flex-wrap gap-2 items-center">
@@ -96,7 +96,7 @@ export default function Report({ pharmacies, receptions, settings, officers = []
         <div className="flex items-center gap-3 mb-4 border-b-2 border-rssb-gold pb-3">
           <img src={logo} alt="RSSB" className="h-12 w-auto" />
           <div>
-            <div className="font-bold text-base text-rssb-blue-dark">Pharmaceutical Invoices Verification Unit</div>
+            <div className="font-semibold text-base text-rssb-blue-dark">Pharmaceutical Invoices Verification Unit</div>
             <div className="text-xs text-gray-500">RECEPTION REPORT &mdash; {mode === 'today' ? 'Daily' : `${month} ${year}`} &middot; RSSB {settings.branch}</div>
           </div>
         </div>

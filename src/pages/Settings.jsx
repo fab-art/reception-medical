@@ -20,7 +20,7 @@ export default function Settings({ settings, setSettings, isAdmin, goTo }) {
   return (
     <div className="p-4 md:p-8 max-w-lg">
       <header className="mb-6">
-        <h1 className="font-display text-2xl md:text-3xl font-semibold text-rssb-blue-dark">Settings</h1>
+        <h1 className="font-display text-2xl md:text-3xl font-medium text-rssb-blue-dark">Settings</h1>
         <p className="text-sm text-gray-500 mt-1">Branch details for the receipt, plus console passwords.</p>
       </header>
       <Card className="p-5 mb-5">

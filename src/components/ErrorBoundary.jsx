@@ -25,7 +25,7 @@ export default class ErrorBoundary extends Component {
       return (
         <div className="min-h-screen flex items-center justify-center bg-[#f4f6f9] p-6">
           <div className="max-w-md w-full bg-white rounded-xl shadow-lg border border-gray-200 p-6 text-center">
-            <div className="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-3 text-lg font-bold">!</div>
+            <div className="w-10 h-10 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-3 text-lg font-semibold">!</div>
             <h1 className="font-semibold text-gray-800 mb-1">Something went wrong</h1>
             <p className="text-sm text-gray-500 mb-4">
               The app hit an unexpected error and couldn't continue. Reloading usually
