@@ -16,7 +16,7 @@ export default function PharmacyList({ pharmacies, setPharmacies }) {
   const filtered = useMemo(() => {
     if (!query.trim()) return pharmacies;
     const q = query.toLowerCase();
-    return pharmacies.filter((p) => p.name.toLowerCase().includes(q) || p.code.includes(q) || p.district.toLowerCase().includes(q));
+    return pharmacies.filter((p) => (p.name || '').toLowerCase().includes(q) || (p.code || '').includes(q) || (p.district || '').toLowerCase().includes(q));
   }, [pharmacies, query]);
 
   async function handleSave(e) {
@@ -109,7 +109,7 @@ export default function PharmacyList({ pharmacies, setPharmacies }) {
                 <td className="px-4 py-2 text-gray-600">{p.district}</td>
                 <td className="px-4 py-2 text-gray-600">{p.province}</td>
                 <td className="px-4 py-2 text-right">
-                  <button className="text-xs text-rssb-blue underline" onClick={() => setEditing({ ...p })}>Edit</button>
+                  <button className="text-xs text-rssb-blue underline" onClick={() => setEditing({ ...EMPTY, ...p })}>Edit</button>
                 </td>
               </tr>
             ))}
