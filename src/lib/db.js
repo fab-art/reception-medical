@@ -1,6 +1,6 @@
 import { v4 as uuid } from 'uuid';
 import { loadLocal, saveLocal } from './local';
-import { supabase } from './supabase';
+import { supabase, supabaseConfigured } from './supabase';
 import { toSnake, toCamel, listToCamel } from './casing';
 import { SLA_DAYS, STATUSES, ageDays } from './workflow';
 import seedFacilities from '../data/facilities-seed.json';
@@ -26,7 +26,7 @@ const DEFAULT_SETTINGS = {
 };
 
 function now() { return new Date().toISOString(); }
-function isOnline() { return typeof navigator === 'undefined' ? true : navigator.onLine; }
+function isOnline() { return supabaseConfigured && (typeof navigator === 'undefined' ? true : navigator.onLine); }
 
 async function queueWrite(op) {
   const queue = await loadLocal('queue', []);
@@ -194,7 +194,7 @@ export async function addReception(record) {
     category: record.category || '', periodMonth: record.periodMonth, periodYear: Number(record.periodYear),
     billNumber: record.billNumber || '', vouchers: Number(record.vouchers || 0), amountBilled: Number(record.amountBilled || 0),
     submittedByName: record.submittedByName || '', receivedByName: record.receivedByName || '',
-    receivedAt: record.receivedAt || now(), submittedToHQAt: record.submittedToHQAt || record.receivedAt || now(),
+    receivedAt: record.receivedAt || now(), submittedToHqAt: record.submittedToHqAt || record.receivedAt || now(),
     status: STATUSES.RECEPTION_CHECK, assignedOfficerId: null, assignedAt: null,
     requirementsComplete: false, correctionCount: 0, correctionReason: '', deductionAmount: null, verifiedAmount: null,
     billId: '', vouchersDone: 0, verificationStartedAt: null, verifiedAt: null, amountToPay: null,
