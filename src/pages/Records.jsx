@@ -41,7 +41,7 @@ export default function Records({ receptions, setReceptions, settings }) {
     <div className="p-4 md:p-8 max-w-6xl">
       <header className="mb-6 flex flex-col md:flex-row md:items-end md:justify-between gap-3">
         <div>
-          <h1 className="font-display text-2xl md:text-3xl font-semibold text-rssb-blue-dark">Reception Records</h1>
+          <h1 className="font-display text-2xl md:text-3xl font-medium text-rssb-blue-dark">Reception Records</h1>
           <p className="text-sm text-gray-500 mt-1">{filtered.length} record(s) &middot; {totalVouchers} vouchers &middot; {formatMoney(totalAmount)} RWF</p>
         </div>
         <div className="flex gap-2">
@@ -188,7 +188,7 @@ function EditModal({ record, onClose, onSaved }) {
           <Field label="Received by - Function">
             <input className={inputCls} value={form.receivedByFunction} onChange={(e) => setForm({ ...form, receivedByFunction: e.target.value })} />
           </Field>
-          <Field label="Pharmacy email" className="col-span-2">
+          <Field label="Facility email" className="col-span-2">
             <input type="email" className={inputCls} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
           </Field>
         </div>

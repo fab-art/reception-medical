@@ -34,7 +34,7 @@ export default function Receipt({ record, settings }) {
         </div>
       </div>
 
-      <h1 className="text-center font-bold underline text-base mb-4 tracking-wide text-rssb-blue-dark">
+      <h1 className="text-center font-semibold underline text-base mb-4 tracking-wide text-rssb-blue-dark">
         ACKNOWLEDGEMENT RECEIPT OF INVOICES
       </h1>
 
@@ -58,7 +58,7 @@ export default function Receipt({ record, settings }) {
       </div>
 
       <div className="mb-3 text-[13px] border-t border-b border-gray-400 py-2 space-y-1">
-        <div className="font-bold">AMOUNT BILLED:</div>
+        <div className="font-semibold">AMOUNT BILLED:</div>
         <Row label="IN NUMBERS" value={`${formatMoney(record.amountBilled)} RWF`} bold />
         <Row label="IN LETTERS" value={`${numberToWords(record.amountBilled)} Rwandan Francs`} />
         <Row label="NUMBER OF VOUCHERS" value={record.vouchers} bold />
@@ -66,14 +66,14 @@ export default function Receipt({ record, settings }) {
 
       <div className="grid grid-cols-2 gap-6 mt-4 text-[13px]">
         <div>
-          <div className="font-bold underline mb-1 text-rssb-blue-dark">FOR SUBMISSION</div>
+          <div className="font-semibold underline mb-1 text-rssb-blue-dark">FOR SUBMISSION</div>
           <Row label="NAMES" value={record.submittedByName} />
           <Row label="Function" value={record.submittedByFunction} />
           <Row label="Date" value={formatDateTime(record.receivedAt)} />
           <Row label="Signature" value="" />
         </div>
         <div>
-          <div className="font-bold underline mb-1 text-rssb-blue-dark">VISA FOR THE RECEPTION</div>
+          <div className="font-semibold underline mb-1 text-rssb-blue-dark">VISA FOR THE RECEPTION</div>
           <Row label="NAMES" value={record.receivedByName} />
           <Row label="Function" value={record.receivedByFunction} />
           <Row label="Date" value={formatDateTime(record.receivedAt)} />

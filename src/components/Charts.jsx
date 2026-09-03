@@ -1,5 +1,5 @@
 import {
-  ResponsiveContainer, BarChart, Bar, AreaChart, Area, LineChart, Line,
+  ResponsiveContainer, BarChart, Bar, AreaChart, Area,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell,
 } from 'recharts';
 import { Card } from './UI';

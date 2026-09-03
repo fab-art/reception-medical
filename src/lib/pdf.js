@@ -1,10 +1,13 @@
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
-
 // Renders a DOM node (the printable receipt or report) to a downloadable A4 PDF (feature 7).
+// jspdf/html2canvas are loaded lazily so they don't bloat the main app bundle.
 export async function saveElementAsPdf(elementId, filename) {
   const el = document.getElementById(elementId);
   if (!el) return;
+
+  const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+    import('html2canvas'),
+    import('jspdf'),
+  ]);
 
   const canvas = await html2canvas(el, { scale: 2, backgroundColor: '#ffffff', useCORS: true });
   const imgData = canvas.toDataURL('image/png');

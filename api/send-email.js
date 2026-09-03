@@ -1,5 +1,5 @@
 // Vercel serverless function: POST /api/send-email
-// Sends the pharmacy acknowledgement email through Resend.
+// Sends the facility acknowledgement email through Resend.
 // Requires the RESEND_API_KEY environment variable to be set in your Vercel project
 // (Project Settings > Environment Variables) — never expose this key on the client.
 
@@ -24,7 +24,7 @@ export default async function handler(req, res) {
   try {
     const resend = new Resend(apiKey);
     const { data, error } = await resend.emails.send({
-      from: from || 'RSSB Pharmacy Reception <onboarding@resend.dev>',
+      from: from || 'RSSB Medical Invoice Workflow <onboarding@resend.dev>',
       to: [to],
       subject,
       html,

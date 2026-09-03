@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { Card, StatCard, Button, ProgressBar } from '../components/UI';
 import { IconSun, IconMoney, IconCheck, IconAlert } from '../components/Icons';
 import { formatMoney, isSameDay, MONTHS } from '../lib/utils';
+import { DonutChart, HorizontalBarChart } from '../components/Charts';
 
 export default function Dashboard({ pharmacies, receptions, period, setPeriod, goTo }) {
   const todays = useMemo(() => receptions.filter((r) => isSameDay(r.receivedAt)), [receptions]);
@@ -36,7 +37,7 @@ export default function Dashboard({ pharmacies, receptions, period, setPeriod, g
     <div className="p-4 md:p-8 max-w-6xl">
       <header className="mb-6 flex flex-col md:flex-row md:items-end md:justify-between gap-3">
         <div>
-          <h1 className="font-display text-2xl md:text-3xl font-semibold text-rssb-blue-dark">Reception Dashboard</h1>
+          <h1 className="font-display text-2xl md:text-3xl font-medium text-rssb-blue-dark">Reception Dashboard</h1>
           <p className="text-sm text-gray-500 mt-1">Pharmaceutical Invoices Verification Unit</p>
         </div>
         <div className="flex items-center gap-2">
@@ -63,22 +64,43 @@ export default function Dashboard({ pharmacies, receptions, period, setPeriod, g
         <StatCard
           label={`Submitted (${period.month})`}
           value={`${submittedCodesThisPeriod.size} / ${pharmacies.length}`}
-          sub={`${pct}% of registered pharmacies`}
+          sub={`${pct}% of registered facilities`}
           accent="blue"
           icon={IconCheck}
         />
-        <StatCard label="Remaining this period" value={remaining.length} sub="pharmacies not yet submitted" accent="red" icon={IconAlert} />
+        <StatCard label="Remaining this period" value={remaining.length} sub="facilities not yet submitted" accent="red" icon={IconAlert} />
+      </div>
+
+      <div className="grid md:grid-cols-3 gap-4 mb-4">
+        <DonutChart
+          data={[
+            { name: 'Submitted', value: submittedCodesThisPeriod.size },
+            { name: 'Remaining', value: remaining.length },
+          ]}
+          title="Period coverage"
+          sub={`${period.month} ${period.year}`}
+        />
+        <div className="md:col-span-2">
+          <HorizontalBarChart
+            data={byDistrict.slice(0, 8).map(([district, stat]) => ({ name: district, value: stat.submitted }))}
+            dataKey="value"
+            name="Submitted"
+            title="Coverage by district (top 8)"
+            sub={`${period.month} ${period.year}`}
+            color="#0d7a70"
+          />
+        </div>
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">
         <Card className="p-4">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="font-semibold text-sm text-gray-700">Remaining pharmacies &mdash; {period.month} {period.year}</h2>
+            <h2 className="font-semibold text-sm text-gray-700">Remaining facilities &mdash; {period.month} {period.year}</h2>
             <span className="text-xs text-gray-400">{remaining.length} left</span>
           </div>
           <div className="max-h-80 overflow-y-auto divide-y divide-gray-100">
             {remaining.length === 0 && (
-              <p className="text-sm text-gray-400 py-6 text-center">All registered pharmacies have submitted for this period. \ud83c\udf89</p>
+              <p className="text-sm text-gray-400 py-6 text-center">All registered facilities have submitted for this period. \ud83c\udf89</p>
             )}
             {remaining.map((p) => (
               <div key={p.code} className="py-2 flex items-center justify-between text-sm">
@@ -123,7 +145,7 @@ export default function Dashboard({ pharmacies, receptions, period, setPeriod, g
             <div className="font-display text-xl font-semibold text-rssb-blue">{formatMoney(totalAmountPeriod)} RWF</div>
           </div>
           <div>
-            <div className="text-gray-400 text-xs">Pharmacies submitted</div>
+            <div className="text-gray-400 text-xs">Facilities submitted</div>
             <div className="font-display text-xl font-semibold text-rssb-blue">{submittedCodesThisPeriod.size}</div>
           </div>
         </div>
