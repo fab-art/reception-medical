@@ -1,0 +1,111 @@
+@import "tailwindcss";
+
+@theme {
+  /* Brand */
+  --color-rssb-blue: #0b3d78;
+  --color-rssb-blue-dark: #06203f;
+  --color-rssb-blue-light: #e8f0fb;
+  --color-rssb-gold: #c9a227;
+  --color-rssb-gold-light: #fbf3dc;
+  --color-rssb-teal: #0d7a70;
+  --color-rssb-teal-light: #e3f6f2;
+
+  /* Semantic status colors (used consistently for pipeline stages) */
+  --color-status-info: #2563eb;
+  --color-status-info-bg: #eff4ff;
+  --color-status-warn: #b45309;
+  --color-status-warn-bg: #fef3e0;
+  --color-status-success: #0d7a70;
+  --color-status-success-bg: #e3f6f2;
+  --color-status-danger: #be123c;
+  --color-status-danger-bg: #fdeaee;
+  --color-status-neutral: #475569;
+  --color-status-neutral-bg: #f1f5f9;
+
+  /* Surfaces */
+  --color-surface: #ffffff;
+  --color-surface-muted: #f6f8fb;
+  --color-app-bg: #eef1f6;
+
+  --font-display: "Fraunces", "Georgia", serif;
+  --font-body: "Inter", "Helvetica Neue", sans-serif;
+  --font-mono: "IBM Plex Mono", "SFMono-Regular", monospace;
+
+  --shadow-card: 0 1px 2px rgba(15, 32, 62, 0.04), 0 1px 8px rgba(15, 32, 62, 0.05);
+  --shadow-card-hover: 0 4px 16px rgba(15, 32, 62, 0.08);
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--color-app-bg);
+  color: #10233f;
+  -webkit-font-smoothing: antialiased;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-mono-tight {
+  font-family: var(--font-mono);
+  letter-spacing: 0.04em;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #c7d0dd transparent;
+}
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-thumb { background: #c7d0dd; border-radius: 999px; }
+
+.card-shadow { box-shadow: var(--shadow-card); }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in { animation: fadeIn .25s ease-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in { animation: none; }
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printable-receipt, #printable-receipt * {
+    visibility: visible;
+  }
+  #printable-receipt {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    transform: none !important;
+  }
+  /* Neutralize the modal's fixed positioning / scroll clipping so the
+     printable content isn't cropped to the on-screen viewport. */
+  .fixed {
+    position: static !important;
+    overflow: visible !important;
+    inset: auto !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 10mm;
+  }
+}
