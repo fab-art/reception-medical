@@ -90,8 +90,7 @@ behavior, not a bug, but worth knowing so you don't chase it as one.
 3. Officer PINs seeded here are placeholders (`1000`, `1001`, ...) — not
    secret, just sequential. Change them for real officers in
    **Admin → Officers** after go-live, and change the three shared passwords
-   in **Admin/Super Admin → Settings** (`admin123` / `superadmin123` /
-   `reception123` are the current defaults).
+   in **Admin/Super Admin → Settings** (`admin123` / `superadmin123` are the current defaults).
 
 ### Running all 11 invoice parts via CLI in one go (optional, faster)
 
@@ -149,7 +148,7 @@ just at runtime.
 
 ## 4. Sanity check after deploy
 
-- Log in with `admin123` → **Pharmacies/Facilities** should list 823 rows,
+- Log in with `admin123` → **Facilities** should list 823 rows,
   **Officers** should list ~51.
 - Log in with a seeded officer PIN → their assigned/verified counts should
   reflect the imported historical data once you assign some invoices to them

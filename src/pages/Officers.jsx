@@ -1,195 +1,121 @@
 import { useMemo, useState } from 'react';
-import { Card, Field, inputCls, Button, PinChip, StatusBadge } from '../components/UI';
-import { addOfficer, removeOfficer, updateOfficer } from '../lib/db';
-import { formatMoney, generatePin } from '../lib/utils';
+import { Card, Field, inputCls, Button, Modal } from '../components/UI';
+import { ROLE_LABELS } from '../lib/auth';
+import { addOfficer, updateOfficer, removeOfficer } from '../lib/db';
+import { useToast } from '../lib/toast';
 
-const ROLE_OPTIONS = [
-  { value: 'officer', label: 'Verification Officer', hint: 'Verifies invoices assigned to them.' },
-  { value: 'reception', label: 'Reception', hint: 'Logs incoming invoices at the front desk.' },
-];
+const ROLES = ['district_officer', 'zone_supervisor', 'hq_assistant', 'hq_reception', 'lead_medical_officer', 'manager', 'finance'];
+const ZONES = ['Kigali City Zone', 'Northern Zone', 'Southern Zone', 'Eastern Zone', 'Western Zone'];
 
-export default function Officers({ officers, setOfficers, receptions }) {
-  const [name, setName] = useState('');
-  const [title, setTitle] = useState('');
-  const [roleKind, setRoleKind] = useState('officer');
-  const [justCreated, setJustCreated] = useState(null); // { name, pin }
+export default function Officers({ officers = [], invoices = [], onChanged }) {
+  const [q, setQ] = useState('');
+  const [editing, setEditing] = useState(null);
+  const [creating, setCreating] = useState(false);
+  const toast = useToast();
 
-  const workload = useMemo(() => {
-    const map = {};
-    for (const o of officers) map[o.id] = { count: 0, vouchers: 0, amount: 0, completed: 0, received: 0 };
-    for (const r of receptions) {
-      if (r.assignedOfficerId && map[r.assignedOfficerId]) {
-        map[r.assignedOfficerId].count += 1;
-        map[r.assignedOfficerId].vouchers += Number(r.vouchers || 0);
-        map[r.assignedOfficerId].amount += Number(r.amountBilled || 0);
-        if (r.status === 'verified' || r.status === 'paid') map[r.assignedOfficerId].completed += 1;
-      }
-      // Reception work this officer personally logged at the desk counts toward their workload.
-      if (r.submittedByOfficerId && map[r.submittedByOfficerId]) {
-        map[r.submittedByOfficerId].received += 1;
-      }
-    }
-    return map;
-  }, [officers, receptions]);
+  const rows = useMemo(() => {
+    let l = officers;
+    if (q.trim()) { const s = q.toLowerCase(); l = l.filter((o) => o.name.toLowerCase().includes(s) || (o.district || '').toLowerCase().includes(s)); }
+    return l.slice().sort((a, b) => a.role.localeCompare(b.role) || a.name.localeCompare(b.name));
+  }, [officers, q]);
 
-  const unassignedCount = receptions.filter((r) => !r.assignedOfficerId).length;
-  const receptionCount = officers.filter((o) => o.isReceptionist).length;
-
-  // Core of the redesigned assignment flow: creating (or re-flagging) a Reception
-  // account never asks anyone to type a PIN — one is generated here, shown once,
-  // and stored on the officer record so they can log in immediately.
-  async function handleAdd(e) {
-    e.preventDefault();
-    if (!name.trim()) return;
-    const pin = generatePin(officers);
-    const created = await addOfficer({ name, role: title, isReceptionist: roleKind === 'reception', pin });
-    await setOfficers();
-    const saved = created.find((o) => o.name === name && o.pin === pin) || { name, pin };
-    setJustCreated({ name: saved.name, pin: saved.pin });
-    setName(''); setTitle(''); setRoleKind('officer');
-  }
-
-  async function handleRemove(id) {
-    if (!confirm('Remove this officer? Records already assigned to them stay assigned, but they will no longer appear in the assignment list.')) return;
-    await removeOfficer(id);
-    await setOfficers();
-  }
-
-  async function toggleReceptionist(o) {
-    await updateOfficer(o.id, { isReceptionist: !o.isReceptionist });
-    await setOfficers();
-  }
-
-  async function regeneratePin(o) {
-    if (!confirm(`Generate a new PIN for ${o.name}? Their current PIN will stop working immediately.`)) return;
-    const pin = generatePin(officers);
-    await updateOfficer(o.id, { pin });
-    await setOfficers();
-    setJustCreated({ name: o.name, pin });
+  function workloadFor(o) {
+    return invoices.filter((r) => r.assignedOfficerId === o.id || r.assignedAssistantId === o.id).length;
   }
 
   return (
-    <div className="p-4 md:p-8 max-w-5xl">
-      <header className="mb-6">
-        <h1 className="font-display text-2xl md:text-3xl font-medium text-rssb-blue-dark">Officers &amp; Access</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Add staff, control who handles reception, and issue their login PIN &mdash; all from one place.
-          {unassignedCount > 0 && <span className="text-status-warn font-medium"> {unassignedCount} record(s) currently unassigned.</span>}
-        </p>
+    <div className="p-4 md:p-8 max-w-6xl">
+      <header className="mb-6 flex items-end justify-between gap-3">
+        <div>
+          <h1 className="font-display text-2xl md:text-3xl font-medium text-rssb-blue-dark">Officers & staff</h1>
+          <p className="text-sm text-gray-500 mt-1">{officers.length} active accounts across districts, zones, and HQ.</p>
+        </div>
+        <Button onClick={() => setCreating(true)}>Add officer</Button>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-5 mb-5">
-        <Card className="p-5 md:col-span-3">
-          <h2 className="text-sm font-semibold text-gray-700 mb-1">Add a staff account</h2>
-          <p className="text-xs text-gray-400 mb-3">A login PIN is generated automatically &mdash; there's nothing to type or remember up front.</p>
-          <form onSubmit={handleAdd}>
-            <div className="grid grid-cols-2 gap-x-4">
-              <Field label="Full name">
-                <input className={inputCls} value={name} onChange={(e) => setName(e.target.value)} required />
-              </Field>
-              <Field label="Title (optional)">
-                <input className={inputCls} placeholder="e.g. Senior Officer" value={title} onChange={(e) => setTitle(e.target.value)} />
-              </Field>
-            </div>
-            <Field label="Access type">
-              <div className="grid grid-cols-2 gap-2">
-                {ROLE_OPTIONS.map((opt) => (
-                  <button
-                    type="button"
-                    key={opt.value}
-                    onClick={() => setRoleKind(opt.value)}
-                    className={`text-left px-3 py-2.5 rounded-lg border text-sm transition-colors cursor-pointer
-                      ${roleKind === opt.value ? 'border-rssb-blue bg-rssb-blue-light text-rssb-blue-dark' : 'border-gray-200 text-gray-600 hover:border-gray-300'}`}
-                  >
-                    <div className="font-medium">{opt.label}</div>
-                    <div className="text-[11px] opacity-70 mt-0.5">{opt.hint}</div>
-                  </button>
-                ))}
-              </div>
-            </Field>
-            <Button type="submit" className="w-full mt-1">Create account &amp; generate PIN</Button>
-          </form>
-        </Card>
-
-        <Card className="p-5 md:col-span-2 bg-gradient-to-br from-rssb-blue-light/60 to-white">
-          <h2 className="text-sm font-semibold text-gray-700 mb-3">Snapshot</h2>
-          <div className="space-y-3 text-sm">
-            <div className="flex justify-between"><span className="text-gray-500">Total staff</span><span className="font-semibold text-rssb-blue-dark">{officers.length}</span></div>
-            <div className="flex justify-between"><span className="text-gray-500">Reception access</span><span className="font-semibold text-rssb-blue-dark">{receptionCount}</span></div>
-            <div className="flex justify-between"><span className="text-gray-500">Verification officers</span><span className="font-semibold text-rssb-blue-dark">{officers.length - receptionCount}</span></div>
-            <div className="flex justify-between"><span className="text-gray-500">Unassigned records</span><span className="font-semibold text-status-warn">{unassignedCount}</span></div>
-          </div>
-        </Card>
-      </div>
-
-      {justCreated && (
-        <Card className="p-4 mb-5 border-rssb-teal/30 bg-rssb-teal-light/50 flex flex-wrap items-center justify-between gap-3 animate-fade-in">
-          <div>
-            <div className="text-sm font-semibold text-rssb-blue-dark">PIN ready for {justCreated.name}</div>
-            <div className="text-xs text-gray-500">Share this PIN with them &mdash; entering it on the login screen opens their workspace directly.</div>
-          </div>
-          <div className="flex items-center gap-2">
-            <PinChip pin={justCreated.pin} size="lg" />
-            <button className="text-xs text-gray-400 underline min-h-[44px] px-1" onClick={() => setJustCreated(null)}>Dismiss</button>
-          </div>
-        </Card>
-      )}
+      <input className={`${inputCls} !w-72 mb-4`} placeholder="Search name or district" value={q} onChange={(e) => setQ(e.target.value)} />
 
       <Card className="overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wide">
+          <thead className="bg-gray-50 text-xs uppercase text-gray-500">
             <tr>
-              <th className="text-left px-4 py-2.5">Staff</th>
-              <th className="text-left px-4 py-2.5">Access</th>
-              <th className="text-left px-4 py-2.5">Login PIN</th>
-              <th className="text-right px-4 py-2.5">Assigned</th>
-              <th className="text-right px-4 py-2.5">Completed</th>
-              <th className="text-right px-4 py-2.5">Reception logged</th>
-              <th className="text-right px-4 py-2.5">Amount (RWF)</th>
-              <th className="px-4 py-2.5"></th>
+              <th className="text-left px-4 py-2">Name</th><th className="text-left px-4 py-2">Role</th>
+              <th className="text-left px-4 py-2">District / Zone</th><th className="text-right px-4 py-2">Current invoices</th>
+              <th className="text-left px-4 py-2">PIN</th><th></th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
-            {officers.map((o) => (
-              <tr key={o.id} className="hover:bg-gray-50/60">
-                <td className="px-4 py-2.5">
-                  <div className="font-medium text-gray-800">{o.name}</div>
-                  {o.role && <div className="text-xs text-gray-400">{o.role}</div>}
-                </td>
-                <td className="px-4 py-2.5">
-                  <button onClick={() => toggleReceptionist(o)} className="cursor-pointer">
-                    <StatusBadge status={o.isReceptionist ? 'assigned' : 'received'} label={o.isReceptionist ? 'Reception' : 'Officer'} />
-                  </button>
-                </td>
-                <td className="px-4 py-2.5">
-                  <div className="flex items-center gap-2">
-                    <PinChip pin={o.pin} size="sm" />
-                    <button className="text-[11px] text-rssb-blue underline decoration-dotted min-h-[36px]" onClick={() => regeneratePin(o)}>
-                      regenerate
-                    </button>
-                  </div>
-                </td>
-                <td className="px-4 py-2.5 text-right">{workload[o.id]?.count || 0}</td>
-                <td className="px-4 py-2.5 text-right">{workload[o.id]?.completed || 0}</td>
-                <td className="px-4 py-2.5 text-right">{workload[o.id]?.received || 0}</td>
-                <td className="px-4 py-2.5 text-right">{formatMoney(workload[o.id]?.amount || 0)}</td>
-                <td className="px-4 py-2.5 text-right">
-                  <button className="text-xs text-rose-600 underline min-h-[44px]" onClick={() => handleRemove(o.id)}>Remove</button>
-                </td>
+          <tbody className="divide-y">
+            {rows.map((o) => (
+              <tr key={o.id}>
+                <td className="px-4 py-2 font-medium">{o.name}</td>
+                <td className="px-4 py-2">{ROLE_LABELS[o.role] || o.role}</td>
+                <td className="px-4 py-2 text-gray-500">{o.district || o.zone || '—'}</td>
+                <td className="px-4 py-2 text-right">{workloadFor(o)}</td>
+                <td className="px-4 py-2 font-mono text-xs">{o.pin}</td>
+                <td className="px-4 py-2 text-right"><button className="text-rssb-blue text-xs underline" onClick={() => setEditing(o)}>Edit</button></td>
               </tr>
             ))}
-            {officers.length === 0 && (
-              <tr><td colSpan={8} className="text-center py-8 text-gray-400 text-sm">No officers added yet.</td></tr>
-            )}
           </tbody>
         </table>
       </Card>
 
-      <p className="text-xs text-gray-400 mt-3">
-        Staff with "Reception" access are taken straight to the Reception desk when they log in with
-        their PIN, instead of the verification portal &mdash; and any invoices they receive count toward their workload above.
-        Click a PIN to copy it, or "regenerate" to issue a new one if it's been shared too widely.
-      </p>
+      {(editing || creating) && (
+        <OfficerModal officer={editing} onClose={() => { setEditing(null); setCreating(false); }} onSaved={async () => { await onChanged?.(); toast('Officer saved.'); setEditing(null); setCreating(false); }} />
+      )}
     </div>
+  );
+}
+
+function OfficerModal({ officer, onClose, onSaved }) {
+  const [form, setForm] = useState(officer || { name: '', role: 'district_officer', district: '', zone: '', pin: String(1000 + Math.floor(Math.random() * 9000)) });
+  const [busy, setBusy] = useState(false);
+  const toast = useToast();
+
+  async function save() {
+    setBusy(true);
+    try {
+      if (officer) await updateOfficer(officer.id, form);
+      else await addOfficer({ ...form, assignedFacilityCodes: [], workloadByPeriod: {}, isReceptionist: form.role === 'hq_reception', isDistrictOfficer: form.role === 'district_officer' });
+      await onSaved();
+    } catch (e) { toast(e.message || 'Could not save.', 'error'); }
+    finally { setBusy(false); }
+  }
+  async function deactivate() {
+    if (!officer) return;
+    setBusy(true);
+    try { await removeOfficer(officer.id); await onSaved(); } finally { setBusy(false); }
+  }
+
+  return (
+    <Modal open onClose={onClose}>
+      <div className="p-6">
+        <h2 className="font-display text-lg font-medium text-rssb-blue-dark mb-4">{officer ? 'Edit officer' : 'Add officer'}</h2>
+        <div className="space-y-3">
+        <Field label="Full name"><input className={inputCls} value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></Field>
+        <Field label="Role">
+          <select className={inputCls} value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })}>
+            {ROLES.map((r) => <option key={r} value={r}>{r.replaceAll('_', ' ')}</option>)}
+          </select>
+        </Field>
+        {form.role === 'district_officer' && <Field label="District"><input className={inputCls} value={form.district || ''} onChange={(e) => setForm({ ...form, district: e.target.value })} /></Field>}
+        {(form.role === 'district_officer' || form.role === 'zone_supervisor') && (
+          <Field label="Zone">
+            <select className={inputCls} value={form.zone || ''} onChange={(e) => setForm({ ...form, zone: e.target.value })}>
+              <option value="">—</option>
+              {ZONES.map((z) => <option key={z} value={z}>{z}</option>)}
+            </select>
+          </Field>
+        )}
+        <Field label="Login PIN"><input className={inputCls} value={form.pin || ''} onChange={(e) => setForm({ ...form, pin: e.target.value })} /></Field>
+        <div className="flex justify-between pt-2">
+          {officer && <Button variant="danger" disabled={busy} onClick={deactivate}>Deactivate</Button>}
+          <div className="flex gap-2 ml-auto">
+            <Button variant="ghost" onClick={onClose}>Cancel</Button>
+            <Button disabled={busy || !form.name} onClick={save}>{busy ? 'Saving…' : 'Save'}</Button>
+          </div>
+        </div>
+        </div>
+      </div>
+    </Modal>
   );
 }

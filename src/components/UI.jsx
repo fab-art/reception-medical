@@ -32,7 +32,7 @@ export function StatCard({ label, value, sub, accent = 'blue', icon: Icon, trend
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="text-[11px] uppercase tracking-wider text-gray-500 mb-1 truncate">{label}</div>
-          <div className={`font-display text-2xl md:text-3xl font-semibold leading-tight ${a.text}`}>{value}</div>
+          <div className={`font-display text-xl md:text-2xl font-semibold leading-tight break-words ${a.text}`}>{value}</div>
           {sub && <div className="text-xs text-gray-400 mt-1">{sub}</div>}
         </div>
         {Icon && (
