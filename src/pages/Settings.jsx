@@ -1,86 +1,44 @@
 import { useState } from 'react';
 import { Card, Field, inputCls, Button } from '../components/UI';
 import { saveSettings } from '../lib/db';
+import { useToast } from '../lib/toast';
 
-// Officer/reception PIN management lives entirely on the Officers page now —
-// keeping a single place to issue, view, and regenerate PINs avoids the two
-// screens drifting out of sync with each other.
-export default function Settings({ settings, setSettings, isAdmin, goTo }) {
+export default function Settings({ settings, onChanged }) {
   const [form, setForm] = useState(settings);
-  const [saved, setSaved] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const toast = useToast();
 
-  async function handleSubmit(e) {
+  async function save(e) {
     e.preventDefault();
-    await saveSettings(form);
-    await setSettings();
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    setBusy(true);
+    try { await saveSettings(form); await onChanged?.(); toast('Settings saved.'); }
+    catch (err) { toast(err.message || 'Could not save settings.', 'error'); }
+    finally { setBusy(false); }
   }
 
   return (
-    <div className="p-4 md:p-8 max-w-lg">
+    <div className="p-4 md:p-8 max-w-2xl">
       <header className="mb-6">
-        <h1 className="font-display text-2xl md:text-3xl font-medium text-rssb-blue-dark">Settings</h1>
-        <p className="text-sm text-gray-500 mt-1">Branch details for the receipt, plus console passwords.</p>
+        <h1 className="font-display text-2xl font-medium text-rssb-blue-dark">Settings</h1>
+        <p className="text-sm text-gray-500 mt-1">Branch details and shared admin credentials.</p>
       </header>
-      <Card className="p-5 mb-5">
-        <form onSubmit={handleSubmit}>
-          <h2 className="text-sm font-semibold text-gray-700 mb-3">Branch details</h2>
-          <Field label="RSSB Branch">
-            <input className={inputCls} value={form.branch} onChange={(e) => setForm({ ...form, branch: e.target.value })} />
-          </Field>
-          <Field label="Province">
-            <input className={inputCls} value={form.province} onChange={(e) => setForm({ ...form, province: e.target.value })} />
-          </Field>
-          <Field label="Administrative district">
-            <input className={inputCls} value={form.district} onChange={(e) => setForm({ ...form, district: e.target.value })} />
-          </Field>
-          <Field label="Po Box">
-            <input className={inputCls} value={form.poBox} onChange={(e) => setForm({ ...form, poBox: e.target.value })} />
-          </Field>
-          <Field label="Phone number">
-            <input className={inputCls} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
-          </Field>
-          <Field label="Default receptionist name">
-            <input className={inputCls} value={form.receptionistName} onChange={(e) => setForm({ ...form, receptionistName: e.target.value })} />
-          </Field>
-          <Field label="Default receptionist function">
-            <input className={inputCls} value={form.receptionistFunction} onChange={(e) => setForm({ ...form, receptionistFunction: e.target.value })} />
-          </Field>
-
-          {isAdmin && (
-            <>
-              <div className="border-t border-gray-100 my-4 pt-4">
-                <h2 className="text-sm font-semibold text-gray-700 mb-1">Console passwords</h2>
-                <p className="text-xs text-gray-400 mb-3">
-                  Whoever enters this password on the login screen goes straight to that console.
-                  There is no separate reception password &mdash; reception access is granted through a
-                  generated officer PIN, issued from the <span className="font-medium">Officers</span> page.
-                </p>
-              </div>
-              <Field label="Admin password">
-                <input className={inputCls} value={form.adminPassword || ''} onChange={(e) => setForm({ ...form, adminPassword: e.target.value })} />
-              </Field>
-              <Field label="Super admin password">
-                <input className={inputCls} value={form.superadminPassword || ''} onChange={(e) => setForm({ ...form, superadminPassword: e.target.value })} />
-              </Field>
-            </>
-          )}
-
-          <Button type="submit">Save settings</Button>
-          {saved && <span className="ml-3 text-sm text-rssb-teal">Saved.</span>}
-        </form>
-      </Card>
-
-      {isAdmin && goTo && (
-        <Card className="p-5 flex items-center justify-between gap-3">
-          <div>
-            <h2 className="text-sm font-semibold text-gray-700">Manage officer &amp; reception PINs</h2>
-            <p className="text-xs text-gray-400 mt-0.5">Create accounts, generate PINs, and control reception access on the Officers page.</p>
+      <form onSubmit={save}>
+        <Card className="p-5 mb-4 space-y-3">
+          <Field label="Branch / unit name"><input className={inputCls} value={form.branch || ''} onChange={(e) => setForm({ ...form, branch: e.target.value })} /></Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Province"><input className={inputCls} value={form.province || ''} onChange={(e) => setForm({ ...form, province: e.target.value })} /></Field>
+            <Field label="District"><input className={inputCls} value={form.district || ''} onChange={(e) => setForm({ ...form, district: e.target.value })} /></Field>
           </div>
-          <Button variant="secondary" onClick={() => goTo('officers')}>Go to Officers</Button>
+          <Field label="Verification SLA (days)"><input type="number" className={inputCls} value={form.verificationSlaDays || 15} onChange={(e) => setForm({ ...form, verificationSlaDays: Number(e.target.value) })} /></Field>
         </Card>
-      )}
+        <Card className="p-5 mb-4 space-y-3">
+          <h2 className="font-semibold text-sm text-gray-700">Shared oversight logins</h2>
+          <Field label="Admin password"><input className={inputCls} value={form.adminPassword || ''} onChange={(e) => setForm({ ...form, adminPassword: e.target.value })} /></Field>
+          <Field label="Super admin password"><input className={inputCls} value={form.superadminPassword || ''} onChange={(e) => setForm({ ...form, superadminPassword: e.target.value })} /></Field>
+          <p className="text-xs text-gray-400">Individual staff (district officers, zone supervisors, HQ roles) sign in with their personal PIN from the Officers page, not with these.</p>
+        </Card>
+        <Button type="submit" disabled={busy}>{busy ? 'Saving…' : 'Save settings'}</Button>
+      </form>
     </div>
   );
 }

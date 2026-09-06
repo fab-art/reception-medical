@@ -23,10 +23,12 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
       },
     }),
   ],
   build: {
+    chunkSizeWarningLimit: 3000,
     rolldownOptions: {
       output: {
         codeSplitting: {
@@ -34,6 +36,7 @@ export default defineConfig({
             { name: 'vendor-react', test: /node_modules\/(react|react-dom)\// },
             { name: 'vendor-recharts', test: /node_modules\/(recharts|d3-[a-z-]+)\// },
             { name: 'vendor-supabase', test: /node_modules\/@supabase\// },
+            { name: 'seed-data', test: /src\/data\// },
           ],
         },
       },

@@ -1,37 +1,62 @@
 # RSSB Medical Invoice Workflow System
 
-Improved evolution of `reception-main` for end-to-end medical/health-facility invoice workflow.
+Tracks a medical/health-facility invoice through the real RSSB process, end to end:
 
-## Corrected operating model
+**District submission → Verification (district officer) → Reconciliation (officer ↔ facility) →
+QR-tracked transit to HQ → Lead Medical Officer review → Manager sign-off → Finance payment.**
 
-**District Officer → HQ Reception → Verification Officer → Finance handoff → Paid**
+Built from `RSSB_Master.xlsm`: 823 facilities, 59 officers with real district/zone assignments,
+and 1,649 live invoice records mapped from the workbook's "Consolidated Data" sheet into this
+app's pipeline.
 
-- Verification is performed at HQ.
-- Finance receives verified invoices for payment execution; the application tracks the handoff and reference.
-- HQ Reception owns completeness checking and correction/return cycles.
-- Verification Officers see their assigned queue and enter Billing ID, vouchers completed, amount after verification, deductions, amount to Finance, delay reason and verification status.
-- The primary SLA KPI is **verification within 15 calendar days from submitted-to-HQ timestamp**.
-- Admin/Lead assigns workload and monitors officer completion/voucher metrics and SLA breaches.
-- Super Admin sees organization-wide KPI, money, stage distribution and district performance.
+## Roles
 
-## Demo access
+| Role | What they do |
+|---|---|
+| **District Officer** | Owns one district. Registers invoices arriving from local facilities, runs verification and reconciliation, dispatches to HQ. |
+| **Zone Supervisor** | Oversees several districts' officers; monitors workload and SLA breaches. |
+| **HQ Assistant** | Takes overflow invoices handed off by a Lead/Manager/Supervisor when a district officer is overloaded. |
+| **HQ Reception & Archives** | Confirms physical arrival (QR scan) and archives hard copies; forwards to the Lead. |
+| **Lead Medical Officer** | Reviews for payment eligibility; approves to Manager or returns to the officer. |
+| **Manager** | Signs off; sends to Finance or returns to Lead. |
+| **Finance** | Generates payslip, issues the payment order, marks the facility paid. |
+| **Admin / Super Admin** | Full visibility, officer/facility management, org-wide KPI dashboards, settings. |
 
-- HQ Reception: `reception123`
-- Verification Lead/Admin: `admin123`
-- Super Admin: `superadmin123`
-- District demo: `9003`
-- Verification officers: 4-digit PINs generated in `src/data/officers-seed.json`
+Zone groupings (province-based) are this app's own default — confirm or adjust these in the
+Officers page, since the source workbook doesn't define zone-supervisor structure.
+
+## Sign-in
+
+Individual staff sign in with a personal 4-digit PIN (see `src/data/officers-seed.json`).
+Admin and Super Admin use shared passwords, set in Settings (`admin123` / `superadmin123` by
+default — change these before any real deployment).
 
 ## Run
 
 ```bash
 npm install
-npm run dev
-npm run build
+npm run dev      # local dev server
+npm run build    # production build
+npm run lint      # oxlint
 ```
 
-The included local seed data is derived from the supplied workbooks. The Supabase schema in `supabase/schema.sql` is normalized for a production migration.
+Without `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` set, the app runs entirely off its local
+seed data and browser storage — good for evaluating the app, but nothing is shared across devices.
+See `DEPLOY.md` to connect a real Supabase project, and `supabase/schema.sql` for the schema
+(**not compatible with any previous version of this app's database** — use a fresh project).
 
-## Important production hardening
+## What's tracked on every invoice
 
-The original prototype used anonymous Supabase read/write plus hard-coded demo passwords. This version keeps local demo access for rapid prototyping, but the included schema is designed to move to Supabase Auth + role-aware RLS before production deployment.
+Submission timestamp, verification start/end + billing ID + deductions, reconciliation
+start/end, transit dispatch/QR/receipt, lead decision, manager decision, payslip/payment-order/
+paid dates, and a full append-only event log (who did what, when) that powers the per-invoice
+"journey" timeline in the invoice workspace.
+
+## Known limitations of this prototype
+
+- No Supabase Auth / Row Level Security yet — see the note at the bottom of `supabase/schema.sql`.
+- Zone-supervisor structure is a placeholder grouping, not sourced from RSSB's actual org chart.
+- Historical invoices imported from the workbook have no event-log history (they predate the
+  app); only invoices created or transitioned going forward get a full journey timeline.
+- Some historical "in transit to HQ" records are missing a dispatch date in the source workbook,
+  so they won't show a QR code until an officer re-dispatches them.
